@@ -15,6 +15,7 @@ ENV KAFKA_BROKERS kafka.railway.internal:29092
 ENV KAFKA_CLIENT_ID telecomx-support-service
 ENV KAFKA_GROUP_ID telecomx-support-consumer
 ENV KAFKA_TOPIC Customer
+ENV MONGODB_URI mongodb://mongo:PmcOBJOIgMBQjABoWQeMoJdEMWvSaCEf@mongodb-vhao.railway.internal:27017
 ENV PORT 8080
 
 COPY --from=builder /app/rest-service .
