@@ -3,9 +3,10 @@ package listener
 import (
 	"context"
 	"encoding/json"
-	"github.com/segmentio/kafka-go"
 	"log"
 	"time"
+
+	"github.com/segmentio/kafka-go"
 
 	"telecomx-support-service/internal/application/service"
 	"telecomx-support-service/internal/domain/model"
@@ -21,6 +22,22 @@ type UserPayload struct {
 	Email     string `json:"email,omitempty"`
 	Suspended bool   `json:"suspended,omitempty"`
 	Deleted   bool   `json:"deleted,omitempty"`
+}
+
+// AltCustomerEvent supports incoming messages that use keys: "event" and "data"
+type AltCustomerEvent struct {
+    Event string          `json:"event"`
+    Data  json.RawMessage `json:"data"`
+}
+
+// toJSON returns a compact JSON representation of any value for logging.
+// Falls back to an error string if marshaling fails.
+func toJSON(v interface{}) string {
+    b, err := json.Marshal(v)
+    if err != nil {
+        return "<json_error: " + err.Error() + ">"
+    }
+    return string(b)
 }
 
 func StartKafkaListener(svc *service.SupportService, brokers []string, topic, group, client string) error {
