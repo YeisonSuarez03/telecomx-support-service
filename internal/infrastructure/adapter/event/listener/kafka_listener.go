@@ -44,13 +44,33 @@ func StartKafkaListener(svc *service.SupportService, brokers []string, topic, gr
 		}
 
 		var event CustomerEvent
-		if err := json.Unmarshal(msg.Value, &event); err != nil {
-			log.Println("Invalid event:", err)
-			continue
-		}
+        if err := json.Unmarshal(msg.Value, &event); err != nil {
+            // Try fallback shape {"event": "...", "data": {...}}
+            var alt AltCustomerEvent
+            if err2 := json.Unmarshal(msg.Value, &alt); err2 != nil {
+                log.Println("Invalid event (both shapes failed):", err, "|", err2)
+                continue
+            }
+            event.Type = alt.Event
+            event.Payload = alt.Data
+        } else if event.Type == "" && len(event.Payload) == 0 {
+            // Some producers may use different keys; attempt fallback even if first unmarshal succeeded but empty
+            var alt AltCustomerEvent
+            if err2 := json.Unmarshal(msg.Value, &alt); err2 == nil {
+                event.Type = alt.Event
+                event.Payload = alt.Data
+            }
+        }
+
+        // Log parsed event type and a trimmed payload preview
+        log.Printf("[Kafka] Parsed event type=%s payload_len=%d", event.Type, len(event.Payload))
+        // Log full event JSON for debugging
+        log.Printf("[Kafka] Event JSON=%s", toJSON(event))
 
 		var payload UserPayload
 		_ = json.Unmarshal(event.Payload, &payload)
+        // Log full payload JSON for debugging
+        log.Printf("[Kafka] Payload JSON=%s", toJSON(payload))
 
 		switch event.Type {
 		case "Customer.Created":
