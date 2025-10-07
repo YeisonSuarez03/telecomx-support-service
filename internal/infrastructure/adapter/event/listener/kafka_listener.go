@@ -116,6 +116,30 @@ func StartKafkaListener(svc *service.SupportService, brokers []string, topic, gr
 					return err
 				}
 			}
+		case "Customer.Suspended":
+				err := svc.Create(context.Background(), &model.Support{
+					UserID:     payload.UserID,
+					Issue:      "Customer canceled support tickets from Telecomx",
+					Status:     "finish",
+					CreatedAt:  time.Now(),
+					ResolvedAt: time.Now(),
+				})
+				if err != nil {
+					log.Println("Error creating customer:", err)
+					return err
+				}
+		case "Customer.Reactivated":
+				err := svc.Create(context.Background(), &model.Support{
+					UserID:     payload.UserID,
+					Issue:      "Customer reactivated services from Telecomx",
+					Status:     "finish",
+					CreatedAt:  time.Now(),
+					ResolvedAt: time.Now(),
+				})
+				if err != nil {
+					log.Println("Error creating customer:", err)
+					return err
+				}
 		case "Customer.Deleted":
 			err := svc.Delete(context.Background(), payload.UserID)
 			if err != nil {
